@@ -1,0 +1,50 @@
+.\" Generated from the locally built Dork Core 28.4.0 binary.
+.TH DORKCOIN-UTIL "1" "" "Dork Core 28.4.0" "User Commands"
+.SH NAME
+dorkcoin-util \- Dork Core utility for the Dorkcoin network
+.SH DESCRIPTION
+Dork Core 28.4.0. See the project release-validation notes before deployment.
+.SH OPTIONS
+.nf
+Dork Core dorkcoin-util utility version v28.4.0
+
+Usage:  dorkcoin-util [options] [commands]  Do stuff
+
+Options:
+
+  -?
+       Print this help message and exit
+
+  -version
+       Print version and exit
+
+Debugging/Testing options:
+
+Chain selection options:
+
+  -chain=<chain>
+       Use the chain <chain> (default: main). Allowed values: main, test,
+       regtest
+
+  -signetchallenge
+       Blocks must satisfy the given script to be considered valid (only for
+       signet networks; defaults to the global default signet test
+       network challenge)
+
+  -signetseednode
+       Specify a seed node for the signet network, in the hostname[:port]
+       format, e.g. sig.net:1234 (may be used multiple times to specify
+       multiple seed nodes; defaults to the global default signet test
+       network seed node(s))
+
+  -testnet
+       Use the existing Dorkcoin testnet. Equivalent to -chain=test.
+
+Commands:
+
+  grind
+       Perform proof of work on hex header string
+
+.fi
+.SH SEE ALSO
+Project and release-validation notes: https://github.com/dork-core/dorkcoin
