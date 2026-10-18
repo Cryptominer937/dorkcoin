@@ -78,9 +78,9 @@ BOOST_AUTO_TEST_CASE(network_identity)
     BOOST_CHECK_EQUAL(main->GetConsensus().nCoinbaseMaturity, 100);
     BOOST_CHECK_EQUAL(test->GetConsensus().nCoinbaseMaturity, 10);
     BOOST_CHECK_EQUAL(reg->GetConsensus().nCoinbaseMaturity, 10);
-    BOOST_CHECK_EQUAL(main->GetBurnAddress(), "DEADuzysCH3c9RTpavbRUVwmovVHEccQzK");
-    BOOST_CHECK_EQUAL(test->GetBurnAddress(), "DEADuzysCH3c9RTpavbRUVwmovVHEccQzK");
-    BOOST_CHECK_EQUAL(reg->GetBurnAddress(), "DEADuzysCH3c9RTpavbRUVwmovVHEccQzK");
+    BOOST_CHECK_EQUAL(main->GetBurnAddress(), "DBURN3nLyUMCRZbcZ3ENinyqUQYLsF5K7R");
+    BOOST_CHECK_EQUAL(test->GetBurnAddress(), "DBURN3nLyUMCRZbcZ3ENinyqUQYLsF5K7R");
+    BOOST_CHECK_EQUAL(reg->GetBurnAddress(), "DBURN3nLyUMCRZbcZ3ENinyqUQYLsF5K7R");
     BOOST_CHECK(IsValidDestinationString(main->GetBurnAddress(), *main));
     BOOST_CHECK(IsValidDestinationString(test->GetBurnAddress(), *test));
     BOOST_CHECK(IsValidDestinationString(reg->GetBurnAddress(), *reg));
