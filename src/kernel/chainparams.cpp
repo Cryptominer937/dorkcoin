@@ -122,7 +122,7 @@ public:
         if (!regtest) checkpointData = {{{0, expected}}};
         m_assumeutxo_data.clear();
         chainTxData = {regtest ? 0 : 1773037267, 0, 0};
-        vBurnAddress = {"DEADuzysCH3c9RTpavbRUVwmovVHEccQzK"};
+        vBurnAddress = {"DBURN3nLyUMCRZbcZ3ENinyqUQYLsF5K7R"};
 
         if (regtest) {
             for (const auto& [dep, height] : opts.activation_heights) {
