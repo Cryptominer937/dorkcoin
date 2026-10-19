@@ -7,6 +7,7 @@
 
 #include <QDialog>
 
+#include <cstddef>
 #include <memory>
 
 namespace interfaces {
@@ -44,6 +45,7 @@ public:
     bool isMakeBlankWalletChecked() const;
     bool isExternalSignerChecked() const;
     SeedMode seedMode() const;
+    size_t mnemonicWordCount() const;
 
 private:
     void updateSeedOptions();

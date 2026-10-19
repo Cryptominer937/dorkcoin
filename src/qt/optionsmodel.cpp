@@ -43,7 +43,7 @@ static const char* SettingName(OptionsModel::OptionID option)
     case OptionsModel::ThreadsScriptVerif: return "par";
     case OptionsModel::SpendZeroConfChange: return "spendzeroconfchange";
     case OptionsModel::ReserveBalance: return "reservebalance";
-    case OptionsModel::BurnPercentage: return "burnpercentage";
+    case OptionsModel::DonationPercentage: return "donation";
     case OptionsModel::ExternalSignerPath: return "signer";
     case OptionsModel::MapPortUPnP: return "upnp";
     case OptionsModel::MapPortNatpmp: return "natpmp";
@@ -185,7 +185,7 @@ bool OptionsModel::Init(bilingual_str& error)
 
     // These are shared with the core or have a command-line parameter
     // and we want command-line parameters to overwrite the GUI settings.
-    for (OptionID option : {DatabaseCache, ThreadsScriptVerif, ReserveBalance, BurnPercentage,
+    for (OptionID option : {DatabaseCache, ThreadsScriptVerif, ReserveBalance, DonationPercentage,
                             SpendZeroConfChange, ExternalSignerPath, MapPortUPnP,
                             MapPortNatpmp, Listen, Server, ProxyUse, ProxyUseTor, Language}) {
         std::string setting = SettingName(option);
@@ -397,8 +397,8 @@ QVariant OptionsModel::getOption(OptionID option, const std::string& suffix) con
 #ifdef ENABLE_WALLET
     case ReserveBalance:
         return QString::fromStdString(SettingToString(setting(), FormatMoney(wallet::DEFAULT_RESERVE_BALANCE)));
-    case BurnPercentage:
-        return qlonglong(SettingToInt(setting(), wallet::DEFAULT_BURN_PERCENTAGE));
+    case DonationPercentage:
+        return qlonglong(SettingToInt(setting(), wallet::DEFAULT_DONATION_PERCENTAGE));
     case SpendZeroConfChange:
         return SettingToBool(setting(), wallet::DEFAULT_SPEND_ZEROCONF_CHANGE);
     case ExternalSignerPath:
@@ -556,7 +556,7 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
             setRestartRequired(true);
         }
         break;
-    case BurnPercentage:
+    case DonationPercentage:
         if (changed()) {
             update(static_cast<int64_t>(value.toLongLong()));
             setRestartRequired(true);
@@ -726,7 +726,7 @@ void OptionsModel::checkAndMigrate()
     migrate_setting(ThreadsScriptVerif, "nThreadsScriptVerif");
 #ifdef ENABLE_WALLET
     migrate_setting(ReserveBalance, "nReserveBalance");
-    migrate_setting(BurnPercentage, "nBurnPercentage");
+    migrate_setting(DonationPercentage, "nDonationPercentage");
     migrate_setting(SpendZeroConfChange, "bSpendZeroConfChange");
     migrate_setting(ExternalSignerPath, "external_signer_path");
 #endif

@@ -196,7 +196,9 @@ BOOST_AUTO_TEST_CASE(mnemonic_generate)
         BOOST_CHECK(CheckMnemonic(phrase) == MnemonicStatus::OK);
         BOOST_CHECK(seen.insert(phrase).second);
     }
-    BOOST_CHECK_EQUAL(SplitMnemonic(GenerateMnemonic(12)).size(), 12U);
+    const SecureString phrase12{GenerateMnemonic(12)};
+    BOOST_CHECK_EQUAL(SplitMnemonic(phrase12).size(), 12U);
+    BOOST_CHECK(CheckMnemonic(phrase12) == MnemonicStatus::OK);
 }
 
 BOOST_AUTO_TEST_CASE(mnemonic_descriptor_coin_type)

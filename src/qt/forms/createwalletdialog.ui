@@ -115,7 +115,7 @@
    <item>
     <widget class="QGroupBox" name="seed_groupbox">
      <property name="toolTip">
-      <string>A recovery phrase (BIP39) of 24 words lets you restore this wallet and all its addresses on any device.</string>
+            <string>A BIP39 recovery phrase lets you restore this wallet and all its addresses on any device.</string>
      </property>
      <property name="title">
       <string>Recovery Phrase</string>
@@ -124,16 +124,30 @@
       <item>
        <widget class="QRadioButton" name="seed_generate_radio">
         <property name="toolTip">
-         <string>Create a new wallet and show its 24-word recovery phrase so you can write it down.</string>
+            <string>Create a new wallet and show its recovery phrase so you can write it down.</string>
         </property>
         <property name="text">
-         <string>Generate a new 24-word recovery phrase</string>
+            <string>Generate a new recovery phrase</string>
         </property>
         <property name="checked">
          <bool>true</bool>
         </property>
        </widget>
       </item>
+    <item>
+     <widget class="QComboBox" name="seed_word_count_combo">
+      <item>
+       <property name="text">
+        <string>24 words</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>12 words</string>
+       </property>
+      </item>
+     </widget>
+    </item>
       <item>
        <widget class="QRadioButton" name="seed_restore_radio">
         <property name="toolTip">

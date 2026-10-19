@@ -202,29 +202,29 @@
         </layout>
        </item>
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_Main_BurnLabel">
+        <layout class="QHBoxLayout" name="horizontalLayout_Main_DonationLabel">
          <item>
-          <widget class="QLabel" name="burnPercentageLabel">
+          <widget class="QLabel" name="donationPercentageLabel">
            <property name="text">
-            <string>Percentage of stake rewards to burn</string>
+            <string>Percentage of stake rewards to donate</string>
            </property>
            <property name="textFormat">
             <enum>Qt::PlainText</enum>
            </property>
            <property name="buddy">
-            <cstring>burnPercentage</cstring>
+            <cstring>donationPercentage</cstring>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QSpinBox" name="burnPercentage">
+          <widget class="QSpinBox" name="donationPercentage">
            <property name="toolTip">
-            <string>(set preferrable value in %)</string>
+            <string>Donation percentage (0 to 50)</string>
            </property>
           </widget>
          </item>
          <item>
-          <spacer name="horizontalSpacer_Main_Burn">
+           <spacer name="horizontalSpacer_Main_Donation">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
            </property>

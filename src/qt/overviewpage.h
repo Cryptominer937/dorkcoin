@@ -62,6 +62,7 @@ private:
 private Q_SLOTS:
     void LimitTransactionRows();
     void updateDisplayUnit();
+    void updateRewardTime();
     void handleTransactionClicked(const QModelIndex &index);
     void updateAlerts(const QString &warnings);
     void updateWatchOnlyLabels(bool showWatchOnly);

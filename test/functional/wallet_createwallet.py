@@ -42,6 +42,30 @@ class CreateWalletTest(BitcoinTestFramework):
         w0 = node.get_wallet_rpc('w0')
         address1 = w0.getnewaddress()
 
+        self.log.info("Create a wallet from a 12-word BIP39 phrase.")
+        mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
+        node.createwalletfrommnemonic(
+            wallet_name='mnemonic_wallet',
+            mnemonic=mnemonic,
+            mnemonic_passphrase='TREZOR',
+            wallet_passphrase='wallet-encryption-passphrase',
+            restore=False,
+        )
+        mnemonic_wallet = node.get_wallet_rpc('mnemonic_wallet')
+        mnemonic_wallet.walletpassphrase('wallet-encryption-passphrase', 60)
+        mnemonic_address = mnemonic_wallet.getnewaddress()
+
+        node.createwalletfrommnemonic(
+            wallet_name='mnemonic_wallet_repeat',
+            mnemonic=mnemonic,
+            mnemonic_passphrase='TREZOR',
+            restore=False,
+        )
+        repeated_address = node.get_wallet_rpc('mnemonic_wallet_repeat').getnewaddress()
+        assert_equal(mnemonic_address, repeated_address)
+        assert_raises_rpc_error(-4, "Invalid BIP39 recovery phrase", node.createwalletfrommnemonic,
+            wallet_name='invalid_mnemonic', mnemonic='abandon abandon abandon')
+
         self.log.info("Test disableprivatekeys creation.")
         self.nodes[0].createwallet(wallet_name='w1', disable_private_keys=True)
         w1 = node.get_wallet_rpc('w1')

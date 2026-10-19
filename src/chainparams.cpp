@@ -137,15 +137,15 @@ void SelectParams(const ChainType chain)
     globalChainParams = CreateChainParams(gArgs, chain);
 }
 
-// Dorkcoin: Burning of staking rewards
-std::string CChainParams::GetBurnAddress() const
+// Dorkcoin: staking reward donation destination
+std::string CChainParams::GetDonationAddress() const
 {
-    return !vBurnAddress.empty() ? vBurnAddress[0] : "";
+    return !vDonationAddress.empty() ? vDonationAddress[0] : "";
 }
 
-CScript CChainParams::GetBurnScript() const
+CScript CChainParams::GetDonationScript() const
 {
-    CTxDestination dest = DecodeDestination(GetBurnAddress());
+    CTxDestination dest = DecodeDestination(GetDonationAddress());
     CScript scriptPubKey = GetScriptForDestination(dest);
     return scriptPubKey;
 }

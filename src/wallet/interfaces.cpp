@@ -505,7 +505,7 @@ public:
     {
         RemoveWallet(m_context, m_wallet, /*load_on_start=*/false);
     }
-    unsigned int getBurnPercentage() override { return m_wallet->m_burn_percentage; }
+    unsigned int getDonationPercentage() override { return m_wallet->m_donation_percentage; }
     bool tryGetStakeWeight(uint64_t& nWeight) override
     {
         TRY_LOCK(m_wallet->cs_wallet, locked_wallet);

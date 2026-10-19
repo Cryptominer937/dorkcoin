@@ -16,13 +16,18 @@
 #include <qt/transactiontablemodel.h>
 #include <qt/walletmodel.h>
 
+#include <common/args.h>
+#include <node/miner.h>
+
 #include <QAbstractItemDelegate>
 #include <QApplication>
 #include <QDateTime>
 #include <QPainter>
 #include <QStatusTipEvent>
+#include <QTimer>
 
 #include <algorithm>
+#include <cmath>
 #include <map>
 
 #define DECORATION_SIZE 42
@@ -156,6 +161,11 @@ OverviewPage::OverviewPage(const PlatformStyle *platformStyle, QWidget *parent) 
     ui->listTransactions->setMinimumHeight(NUM_ITEMS * (DECORATION_SIZE + 2));
     ui->listTransactions->setAttribute(Qt::WA_MacShowFocusRect, false);
 
+    auto* reward_timer = new QTimer(this);
+    reward_timer->setInterval(10000);
+    connect(reward_timer, &QTimer::timeout, this, &OverviewPage::updateRewardTime);
+    reward_timer->start();
+
     connect(ui->listTransactions, &TransactionOverviewWidget::clicked, this, &OverviewPage::handleTransactionClicked);
 
     // start with displaying the "out of sync" warnings
@@ -195,7 +205,7 @@ OverviewPage::~OverviewPage()
 void OverviewPage::setBalance(const interfaces::WalletBalances& balances)
 {
     BitcoinUnit unit = walletModel->getOptionsModel()->getDisplayUnit();
-    unsigned int burn_percentage = walletModel->wallet().getBurnPercentage();
+    unsigned int donation_percentage = walletModel->wallet().getDonationPercentage();
     if (walletModel->wallet().isLegacy()) {
         if (walletModel->wallet().privateKeysDisabled()) {
             ui->labelBalance->setText(BitcoinUnits::formatWithPrivacy(unit, balances.watch_only_balance, BitcoinUnits::SeparatorStyle::ALWAYS, m_privacy));
@@ -222,14 +232,14 @@ void OverviewPage::setBalance(const interfaces::WalletBalances& balances)
         ui->labelStake->setText(BitcoinUnits::formatWithPrivacy(unit, balances.stake, BitcoinUnits::SeparatorStyle::ALWAYS, m_privacy));
         ui->labelTotal->setText(BitcoinUnits::formatWithPrivacy(unit, balances.balance + balances.unconfirmed_balance + balances.immature_balance + balances.stake, BitcoinUnits::SeparatorStyle::ALWAYS, m_privacy));
     }
-    ui->labelBurned->setText((m_privacy ? QString::fromStdString("#") : (QString::number(burn_percentage) + "%")) + " of stake rewards");
+    ui->labelDonation->setText((m_privacy ? QString::fromStdString("#") : (QString::number(donation_percentage) + "%")) + " of stake rewards");
     // only show immature (newly mined) balance if it's non-zero, so as not to complicate things
     // for the non-mining users
     bool showImmature = balances.immature_balance != 0;
     bool showStake = balances.stake != 0;
     bool showWatchOnlyImmature = balances.immature_watch_only_balance != 0;
     bool showWatchOnlyStake = balances.watch_only_stake != 0;
-    bool showBurned = burn_percentage != 0;
+    bool showDonation = donation_percentage != 0;
 
     // for symmetry reasons also show immature label when the watch-only one is shown
     ui->labelImmature->setVisible(showImmature || showWatchOnlyImmature);
@@ -238,8 +248,62 @@ void OverviewPage::setBalance(const interfaces::WalletBalances& balances)
     ui->labelStake->setVisible(showStake || showWatchOnlyStake);
     ui->labelStakeText->setVisible(showStake || showWatchOnlyStake);
     ui->labelWatchStake->setVisible(!walletModel->wallet().privateKeysDisabled() && showWatchOnlyStake); // show watch-only stake balance
-    ui->labelBurned->setVisible(showBurned);
-    ui->labelBurnedText->setVisible(showBurned);
+    ui->labelDonation->setVisible(showDonation);
+    ui->labelDonationText->setVisible(showDonation);
+    updateRewardTime();
+}
+
+void OverviewPage::updateRewardTime()
+{
+    if (!gArgs.GetBoolArg("-staking", node::DEFAULT_STAKE)) {
+        ui->labelRewardTime->hide();
+        ui->labelRewardTimeText->hide();
+        return;
+    }
+
+    ui->labelRewardTime->show();
+    ui->labelRewardTimeText->show();
+    if (!walletModel || !clientModel) {
+        ui->labelRewardTime->setText(tr("Wallet unavailable"));
+        return;
+    }
+
+    interfaces::Wallet& wallet = walletModel->wallet();
+    const uint64_t stake_weight = walletModel->getStakeWeight();
+    QString status;
+    if (!wallet.getEnabledStaking()) {
+        status = tr("Staking off");
+    } else if (wallet.getStakerActive() && stake_weight > 0) {
+        const uint64_t network_weight = 1.1429 * walletModel->node().getPoSKernelPS();
+        if (network_weight == 0) {
+            status = tr("Estimating");
+        } else {
+            const double expected_minutes = 1.0455 * Params().GetConsensus().nTargetSpacing *
+                static_cast<double>(network_weight) / stake_weight / 60.0;
+            if (!std::isfinite(expected_minutes) || expected_minutes < 0) {
+                status = tr("Estimating");
+            } else {
+                const uint64_t minutes = std::max<uint64_t>(1, std::ceil(expected_minutes));
+                const uint64_t hours = minutes / 60;
+                const uint64_t remaining_minutes = minutes % 60;
+                status = hours == 0 ? tr("in ~%1m").arg(minutes)
+                                    : tr("in ~%1h %2m").arg(hours).arg(remaining_minutes, 2, 10, QChar('0'));
+            }
+        }
+    } else if (walletModel->node().getNodeCount(ConnectionDirection::Both) == 0) {
+        status = tr("Offline");
+    } else if (walletModel->node().isInitialBlockDownload()) {
+        status = tr("Syncing");
+    } else if (!wallet.hasPrivateKeys()) {
+        status = tr("No private keys");
+    } else if (stake_weight == 0) {
+        status = tr("No mature coins");
+    } else if (wallet.isLocked()) {
+        status = tr("Wallet locked");
+    } else {
+        status = tr("Starting");
+    }
+    ui->labelRewardTime->setText(status);
 }
 
 // show/hide watch-only labels
@@ -266,6 +330,8 @@ void OverviewPage::setClientModel(ClientModel *model)
         // Show warning, for example if this is a prerelease version
         connect(model, &ClientModel::alertsChanged, this, &OverviewPage::updateAlerts);
         updateAlerts(model->getStatusBarWarnings());
+        connect(model, &ClientModel::numBlocksChanged, this, &OverviewPage::updateRewardTime);
+        connect(model, &ClientModel::networkActiveChanged, this, &OverviewPage::updateRewardTime);
 
         connect(model->getOptionsModel(), &OptionsModel::fontForMoneyChanged, this, &OverviewPage::setMonospacedFont);
         setMonospacedFont(clientModel->getOptionsModel()->getFontForMoney());
@@ -295,6 +361,7 @@ void OverviewPage::setWalletModel(WalletModel *model)
         // Keep up to date with wallet
         setBalance(model->getCachedBalance());
         connect(model, &WalletModel::balanceChanged, this, &OverviewPage::setBalance);
+        connect(model, &WalletModel::encryptionStatusChanged, this, &OverviewPage::updateRewardTime);
 
         connect(model->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &OverviewPage::updateDisplayUnit);
 

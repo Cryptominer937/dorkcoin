@@ -41,7 +41,7 @@ QString FromSecure(const SecureString& text)
 }
 } // namespace
 
-SeedPhraseDialog::SeedPhraseDialog(Mode mode, QWidget* parent)
+SeedPhraseDialog::SeedPhraseDialog(Mode mode, QWidget* parent, size_t word_count)
     : QDialog(parent, GUIUtil::dialog_flags), m_mode(mode)
 {
     setWindowTitle(mode == Mode::GENERATE ? tr("New Recovery Phrase") : tr("Restore From Recovery Phrase"));
@@ -52,7 +52,7 @@ SeedPhraseDialog::SeedPhraseDialog(Mode mode, QWidget* parent)
     layout->addWidget(m_pages);
 
     if (m_mode == Mode::GENERATE) {
-        m_mnemonic = GenerateMnemonic(MNEMONIC_DEFAULT_WORD_COUNT);
+        m_mnemonic = GenerateMnemonic(word_count);
         m_words = SplitMnemonic(m_mnemonic);
         m_pages->addWidget(createWordsPage());
         m_pages->addWidget(createVerifyPage());
@@ -203,13 +203,18 @@ QWidget* SeedPhraseDialog::createPassphraseBox(bool generate)
     layout->addWidget(m_passphrase_fields);
 
     connect(m_use_passphrase, &QCheckBox::toggled, [this](bool checked) {
+        if (checked) m_size_without_passphrase = size();
         m_passphrase_fields->setVisible(checked);
         if (!checked) {
             m_passphrase_edit->clear();
             m_passphrase_confirm_edit->clear();
         }
         updateState();
-        adjustSize();
+        if (checked) {
+            adjustSize();
+        } else if (m_size_without_passphrase.isValid()) {
+            resize(m_size_without_passphrase);
+        }
     });
     connect(m_passphrase_edit, &QLineEdit::textChanged, this, &SeedPhraseDialog::updateState);
     connect(m_passphrase_confirm_edit, &QLineEdit::textChanged, this, &SeedPhraseDialog::updateState);

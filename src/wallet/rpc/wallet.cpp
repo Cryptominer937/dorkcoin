@@ -11,6 +11,7 @@
 #include <rpc/util.h>
 #include <util/translation.h>
 #include <wallet/context.h>
+#include <wallet/mnemonic.h>
 #include <wallet/receive.h>
 #include <wallet/rpc/wallet.h>
 #include <wallet/rpc/util.h>
@@ -444,6 +445,79 @@ static RPCHelpMan createwallet()
     PushWarnings(warnings, obj);
 
     return obj;
+},
+    };
+}
+
+static RPCHelpMan createwalletfrommnemonic()
+{
+    return RPCHelpMan{
+        "createwalletfrommnemonic",
+        "\nCreates and loads a descriptor wallet from a BIP39 recovery phrase.\n",
+        {
+            {"wallet_name", RPCArg::Type::STR, RPCArg::Optional::NO, "The name for the new wallet."},
+            {"mnemonic", RPCArg::Type::STR, RPCArg::Optional::NO, "The BIP39 recovery phrase (English words, separated by spaces). Use dorkcoin-cli -stdin to avoid exposing it in process arguments."},
+            {"mnemonic_passphrase", RPCArg::Type::STR, RPCArg::Default{""}, "The optional BIP39 passphrase. Phrase and passphrase must be UTF-8 NFKD normalized. Use dorkcoin-cli -stdin to avoid exposing it in process arguments."},
+            {"wallet_passphrase", RPCArg::Type::STR, RPCArg::Default{""}, "Optional passphrase used to encrypt the wallet file. Use dorkcoin-cli -stdin to avoid exposing it in process arguments."},
+            {"restore", RPCArg::Type::BOOL, RPCArg::Default{true}, "Rescan the blockchain from genesis for existing transactions."},
+            {"avoid_reuse", RPCArg::Type::BOOL, RPCArg::Default{false}, "Track reused addresses."},
+            {"load_on_startup", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED, "Load the wallet automatically on startup; null leaves the setting unchanged."},
+        },
+        RPCResult{
+            RPCResult::Type::OBJ, "", "",
+            {
+                {RPCResult::Type::STR, "name", "The wallet name."},
+                {RPCResult::Type::ARR, "warnings", /*optional=*/true, "Warnings related to creating and loading the wallet.",
+                {
+                    {RPCResult::Type::STR, "", ""},
+                }},
+            }
+        },
+        RPCExamples{
+            HelpExampleCli("createwalletfrommnemonic", "\"recovered\" \"abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about\" \"TREZOR\" \"wallet-encryption-passphrase\"")
+            + HelpExampleRpc("createwalletfrommnemonic", "\"recovered\", \"abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about\", \"TREZOR\", \"wallet-encryption-passphrase\"")
+        },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    WalletContext& context = EnsureWalletContext(request.context);
+
+#ifndef USE_SQLITE
+    throw JSONRPCError(RPC_WALLET_ERROR, "Compiled without sqlite support (required for descriptor wallets)");
+#endif
+
+    SecureString mnemonic{std::string_view{request.params[1].get_str()}};
+    if (CheckMnemonic(mnemonic) != MnemonicStatus::OK) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Invalid BIP39 recovery phrase");
+    }
+
+    SecureString mnemonic_passphrase;
+    if (!request.params[2].isNull()) mnemonic_passphrase = std::string_view{request.params[2].get_str()};
+    SecureString wallet_passphrase;
+    if (!request.params[3].isNull()) wallet_passphrase = std::string_view{request.params[3].get_str()};
+
+    DatabaseOptions options;
+    DatabaseStatus status;
+    ReadDatabaseArgs(*context.args, options);
+    options.require_create = true;
+    options.create_flags = WALLET_FLAG_DESCRIPTORS;
+    if (!request.params[5].isNull() && request.params[5].get_bool()) options.create_flags |= WALLET_FLAG_AVOID_REUSE;
+    options.create_passphrase = wallet_passphrase;
+    options.create_master_key = MnemonicToMasterKey(mnemonic, mnemonic_passphrase);
+    options.create_restore = request.params[4].isNull() || request.params[4].get_bool();
+
+    std::vector<bilingual_str> warnings;
+    bilingual_str error;
+    const std::optional<bool> load_on_start = request.params[6].isNull() ? std::nullopt : std::optional<bool>{request.params[6].get_bool()};
+    const std::shared_ptr<CWallet> wallet = CreateWallet(context, request.params[0].get_str(), load_on_start, options, status, error, warnings);
+    if (!wallet) {
+        const RPCErrorCode code = status == DatabaseStatus::FAILED_ENCRYPT ? RPC_WALLET_ENCRYPTION_FAILED : RPC_WALLET_ERROR;
+        throw JSONRPCError(code, error.original);
+    }
+
+    UniValue result(UniValue::VOBJ);
+    result.pushKV("name", wallet->GetName());
+    PushWarnings(warnings, result);
+    return result;
 },
     };
 }
@@ -1114,6 +1188,7 @@ Span<const CRPCCommand> GetWalletRPCCommands()
         {"wallet", &burn},
         {"wallet", &burnwallet},
         {"wallet", &createwallet},
+        {"wallet", &createwalletfrommnemonic},
         {"wallet", &createwalletdescriptor},
         {"wallet", &restorewallet},
         {"wallet", &dumpprivkey},

@@ -2,9 +2,12 @@
 
 ## Dork Core 28.4.0
 
-- Replaced the staking dev fund donation with burning: `-donatetodevfund` is
-  now `-burnpercentage` (0 to 50, default: 25) and the coinstake output is
-  sent to the burn address. GUI labels renamed accordingly.
+- Staking rewards support a configurable donation percentage with `-donation`
+  (0 to 50, default: 25), sent to the donation address configured in chain
+  parameters.
+- BIP39 wallet creation supports 12- and 24-word phrases in the GUI and via
+  the `createwalletfrommnemonic` RPC/CLI command, including BIP39 and wallet
+  encryption passphrases.
 - GUI "Create Wallet" can generate a new BIP39 24-word recovery phrase (with
   a word verification step) or restore a wallet from an existing 12-24 word
   phrase, with an optional BIP39 passphrase. Restored wallets rescan the whole

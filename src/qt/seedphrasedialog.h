@@ -8,6 +8,7 @@
 #include <support/allocators/secure.h>
 
 #include <QDialog>
+#include <QSize>
 
 #include <vector>
 
@@ -33,7 +34,7 @@ public:
         RESTORE,
     };
 
-    SeedPhraseDialog(Mode mode, QWidget* parent);
+    SeedPhraseDialog(Mode mode, QWidget* parent, size_t word_count);
     ~SeedPhraseDialog();
 
     //! Normalized recovery phrase; valid after the dialog was accepted.
@@ -69,6 +70,7 @@ private:
     QWidget* m_passphrase_fields{nullptr};
     QLineEdit* m_passphrase_edit{nullptr};
     QLineEdit* m_passphrase_confirm_edit{nullptr};
+    QSize m_size_without_passphrase;
     QPushButton* m_back_button{nullptr};
     QPushButton* m_ok_button{nullptr};
 };

@@ -433,15 +433,15 @@ bool CreateCoinStake(CWallet& wallet, unsigned int nBits, int64_t nSearchInterva
     if (nReward < 0)
         return false;
 
-    bool isBurnEnabled = (wallet.m_burn_percentage > 0 && !Params().GetBurnAddress().empty()) ? true : false;
-    CAmount nBurnCredit = 0;
-    CAmount nMinerCredit = 0;
+    bool isDonationEnabled = (wallet.m_donation_percentage > 0 && !Params().GetDonationAddress().empty()) ? true : false;
+    CAmount nDonationCredit = 0;
+    CAmount nStakerCredit = 0;
 
-    if (isBurnEnabled)
+    if (isDonationEnabled)
     {
-        nBurnCredit = (GetProofOfStakeSubsidy() * wallet.m_burn_percentage) / 100;
-        nMinerCredit = nReward - nBurnCredit;
-        nCredit += nMinerCredit;
+        nDonationCredit = (GetProofOfStakeSubsidy() * wallet.m_donation_percentage) / 100;
+        nStakerCredit = nReward - nDonationCredit;
+        nCredit += nStakerCredit;
     }
     else
     {
@@ -452,22 +452,22 @@ bool CreateCoinStake(CWallet& wallet, unsigned int nBits, int64_t nSearchInterva
     if (nCredit >= GetStakeSplitThreshold())
         txNew.vout.push_back(CTxOut(0, scriptPubKeyOut));
 
-    if (isBurnEnabled)
-        txNew.vout.push_back(CTxOut(0, Params().GetBurnScript()));
+    if (isDonationEnabled)
+        txNew.vout.push_back(CTxOut(0, Params().GetDonationScript()));
 
     // Set output amount
     // Reward is always at vout[2] (vout[0]=marker, vout[1]=OP_RETURN carrier)
-    if (txNew.vout.size() == (isBurnEnabled ? 5u : 4u)) {
+    if (txNew.vout.size() == (isDonationEnabled ? 5u : 4u)) {
         txNew.vout[2].nValue = (nCredit / 2 / CENT) * CENT;
         txNew.vout[3].nValue = nCredit - txNew.vout[2].nValue;
-        if (isBurnEnabled)
-            txNew.vout[4].nValue = nBurnCredit;
+        if (isDonationEnabled)
+            txNew.vout[4].nValue = nDonationCredit;
     }
     else
     {
         txNew.vout[2].nValue = nCredit;
-        if (isBurnEnabled)
-            txNew.vout[3].nValue = nBurnCredit;
+        if (isDonationEnabled)
+            txNew.vout[3].nValue = nDonationCredit;
     }
 
     // Sign

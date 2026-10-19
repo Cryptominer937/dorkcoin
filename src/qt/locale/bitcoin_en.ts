@@ -1904,7 +1904,7 @@ The migration process will create a backup of the wallet before migrating. This 
     </message>
     <message>
         <location line="+24"/>
-        <source>Percentage of stake rewards to burn</source>
+        <source>Percentage of stake rewards to donate</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2277,12 +2277,12 @@ The migration process will create a backup of the wallet before migrating. This 
     </message>
     <message>
         <location line="+35"/>
-        <source>Burn:</source>
+        <source>Donation:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+10"/>
-        <source>Percentage of stake rewards burned</source>
+        <source>Percentage of stake rewards donated</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

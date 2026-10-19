@@ -5,6 +5,7 @@
 
 #include <wallet/wallet.h>
 
+#include <charconv>
 #include <config/bitcoin-config.h> // IWYU pragma: keep
 #include <addresstype.h>
 #include <blockfilter.h>
@@ -3360,13 +3361,15 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
     std::optional<CAmount> reserve_balance = ParseMoney(gArgs.GetArg("-reservebalance", FormatMoney(DEFAULT_RESERVE_BALANCE)));
     walletInstance->m_reserve_balance = reserve_balance.value_or(DEFAULT_RESERVE_BALANCE);
 
-    unsigned int burn_percentage = args.GetIntArg("-burnpercentage", DEFAULT_BURN_PERCENTAGE);
-    if (burn_percentage <= 0) {
-        burn_percentage = MIN_BURN_PERCENTAGE;
+    std::string donation_arg = args.GetArg("-donation", strprintf("%u%%", DEFAULT_DONATION_PERCENTAGE));
+    if (!donation_arg.empty() && donation_arg.back() == '%') donation_arg.pop_back();
+    unsigned int donation_percentage = DEFAULT_DONATION_PERCENTAGE;
+    const auto [parsed_end, parse_error] = std::from_chars(donation_arg.data(), donation_arg.data() + donation_arg.size(), donation_percentage);
+    if (parse_error != std::errc{} || parsed_end != donation_arg.data() + donation_arg.size()) {
+        donation_percentage = DEFAULT_DONATION_PERCENTAGE;
     }
-    burn_percentage = std::max(burn_percentage, MIN_BURN_PERCENTAGE);
-    burn_percentage = std::min(burn_percentage, MAX_BURN_PERCENTAGE);
-    walletInstance->m_burn_percentage = burn_percentage;
+    donation_percentage = std::clamp(donation_percentage, MIN_DONATION_PERCENTAGE, MAX_DONATION_PERCENTAGE);
+    walletInstance->m_donation_percentage = donation_percentage;
 
     walletInstance->WalletLogPrintf("Wallet completed loading in %15dms\n", Ticks<std::chrono::milliseconds>(SteadyClock::now() - start));
 

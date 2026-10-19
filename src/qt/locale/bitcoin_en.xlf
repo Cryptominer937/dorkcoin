@@ -1693,7 +1693,7 @@ The migration process will create a backup of the wallet before migrating. This 
         <context-group purpose="location"><context context-type="linenumber">185</context></context-group>
       </trans-unit>
       <trans-unit id="_msg370">
-        <source xml:space="preserve">Percentage of stake rewards to burn</source>
+        <source xml:space="preserve">Percentage of stake rewards to donate</source>
         <context-group purpose="location"><context context-type="linenumber">209</context></context-group>
       </trans-unit>
       <trans-unit id="_msg371">
@@ -2016,11 +2016,11 @@ The migration process will create a backup of the wallet before migrating. This 
         <context-group purpose="location"><context context-type="linenumber">249</context></context-group>
       </trans-unit>
       <trans-unit id="_msg443">
-        <source xml:space="preserve">Burn:</source>
+        <source xml:space="preserve">Donation:</source>
         <context-group purpose="location"><context context-type="linenumber">284</context></context-group>
       </trans-unit>
       <trans-unit id="_msg444">
-        <source xml:space="preserve">Percentage of stake rewards burned</source>
+        <source xml:space="preserve">Percentage of stake rewards donated</source>
         <context-group purpose="location"><context context-type="linenumber">294</context></context-group>
       </trans-unit>
       <trans-unit id="_msg445">

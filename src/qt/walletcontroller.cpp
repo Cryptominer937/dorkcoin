@@ -238,7 +238,8 @@ CreateWalletActivity::~CreateWalletActivity()
 void CreateWalletActivity::askSeedPhrase()
 {
     m_restore = m_create_wallet_dialog->seedMode() == CreateWalletDialog::SeedMode::RESTORE;
-    m_seed_dialog = new SeedPhraseDialog(m_restore ? SeedPhraseDialog::Mode::RESTORE : SeedPhraseDialog::Mode::GENERATE, m_parent_widget);
+    m_seed_dialog = new SeedPhraseDialog(m_restore ? SeedPhraseDialog::Mode::RESTORE : SeedPhraseDialog::Mode::GENERATE,
+                                         m_parent_widget, m_create_wallet_dialog->mnemonicWordCount());
     m_seed_dialog->setWindowModality(Qt::ApplicationModal);
     m_seed_dialog->show();
 

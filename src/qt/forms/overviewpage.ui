@@ -279,19 +279,19 @@
              </widget>
             </item>
             <item row="7" column="0">
-             <widget class="QLabel" name="labelBurnedText">
+            <widget class="QLabel" name="labelDonationText">
               <property name="text">
-               <string>Burn:</string>
+               <string>Donation:</string>
               </property>
              </widget>
             </item>
             <item row="7" column="1">
-             <widget class="QLabel" name="labelBurned">
+            <widget class="QLabel" name="labelDonation">
               <property name="cursor">
                <cursorShape>IBeamCursor</cursorShape>
               </property>
               <property name="toolTip">
-               <string>Percentage of stake rewards burned</string>
+               <string>Percentage of stake rewards donated</string>
               </property>
               <property name="text">
                <string>0</string>
@@ -301,6 +301,26 @@
               </property>
               <property name="textInteractionFlags">
                <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+              </property>
+             </widget>
+            </item>
+            <item row="8" column="0">
+             <widget class="QLabel" name="labelRewardTimeText">
+              <property name="text">
+               <string>Time reward:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="8" column="1">
+             <widget class="QLabel" name="labelRewardTime">
+              <property name="toolTip">
+               <string>Estimated time based on current staking weight</string>
+              </property>
+              <property name="text">
+               <string>Calculating</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
               </property>
              </widget>
             </item>

@@ -57,7 +57,7 @@ public:
         SubFeeFromAmount,       // bool
         ThreadsScriptVerif,     // int
         ReserveBalance,         // CAmount
-        BurnPercentage,     // int
+        DonationPercentage, // int
         DatabaseCache,          // int
         ExternalSignerPath,     // QString
         SpendZeroConfChange,    // bool

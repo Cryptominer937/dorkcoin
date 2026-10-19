@@ -258,8 +258,8 @@ public:
     // Remove wallet.
     virtual void remove() = 0;
 
-    //! Get burn percentage
-    virtual unsigned int getBurnPercentage() = 0;
+    //! Get donation percentage
+    virtual unsigned int getDonationPercentage() = 0;
 
     //! Try get the stake weight
     virtual bool tryGetStakeWeight(uint64_t& nWeight) = 0;

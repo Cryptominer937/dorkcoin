@@ -10,6 +10,7 @@
 
 #include <qt/guiutil.h>
 
+#include <QComboBox>
 #include <QPushButton>
 
 CreateWalletDialog::CreateWalletDialog(QWidget* parent) :
@@ -17,6 +18,8 @@ CreateWalletDialog::CreateWalletDialog(QWidget* parent) :
     ui(new Ui::CreateWalletDialog)
 {
     ui->setupUi(this);
+    ui->seed_word_count_combo->setItemData(0, 24);
+    ui->seed_word_count_combo->setItemData(1, 12);
     ui->buttonBox->button(QDialogButtonBox::Ok)->setText(tr("Create"));
     ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(false);
     ui->wallet_name_line_edit->setFocus(Qt::ActiveWindowFocusReason);
@@ -87,6 +90,8 @@ CreateWalletDialog::CreateWalletDialog(QWidget* parent) :
     for (QCheckBox* checkbox : {ui->disable_privkeys_checkbox, ui->blank_wallet_checkbox, ui->external_signer_checkbox}) {
         connect(checkbox, &QCheckBox::toggled, this, &CreateWalletDialog::updateSeedOptions);
     }
+    connect(ui->seed_generate_radio, &QRadioButton::toggled, this, &CreateWalletDialog::updateSeedOptions);
+    connect(ui->seed_restore_radio, &QRadioButton::toggled, this, &CreateWalletDialog::updateSeedOptions);
     updateSeedOptions();
 
 #ifndef ENABLE_EXTERNAL_SIGNER
@@ -129,6 +134,7 @@ void CreateWalletDialog::updateSeedOptions()
 {
     const bool seed_allowed{!isDisablePrivateKeysChecked() && !isMakeBlankWalletChecked() && !isExternalSignerChecked()};
     ui->seed_groupbox->setEnabled(seed_allowed);
+    ui->seed_word_count_combo->setVisible(seed_allowed && ui->seed_generate_radio->isChecked());
     ui->buttonBox->button(QDialogButtonBox::Ok)->setText(seed_allowed ? tr("Next") : tr("Create"));
 }
 
@@ -136,6 +142,12 @@ CreateWalletDialog::SeedMode CreateWalletDialog::seedMode() const
 {
     if (!ui->seed_groupbox->isEnabled()) return SeedMode::NONE;
     return ui->seed_restore_radio->isChecked() ? SeedMode::RESTORE : SeedMode::GENERATE;
+}
+
+size_t CreateWalletDialog::mnemonicWordCount() const
+{
+    const unsigned int word_count{ui->seed_word_count_combo->currentData().toUInt()};
+    return word_count == 12 ? 12 : 24;
 }
 
 QString CreateWalletDialog::walletName() const

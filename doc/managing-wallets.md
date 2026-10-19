@@ -15,6 +15,29 @@ The following command, for example, creates a descriptor wallet. More informatio
 $ bitcoin-cli createwallet "wallet-01"
 ```
 
+### Creating or Restoring a Wallet From a BIP39 Phrase
+
+Dork Core can generate 12- or 24-word BIP39 phrases in the GUI. To create or
+restore a descriptor wallet from a phrase with the CLI, use
+`createwalletfrommnemonic`. Use `-stdin` so the recovery phrase and passphrases
+are not exposed in command-line arguments or shell history:
+
+```sh
+dorkcoin-cli -stdin -named createwalletfrommnemonic
+wallet_name=wallet-01
+mnemonic=<your 12- or 24-word phrase>
+mnemonic_passphrase=<optional BIP39 passphrase>
+wallet_passphrase=<optional wallet encryption passphrase>
+restore=true
+```
+
+Finish stdin with Ctrl-D. The BIP39 passphrase derives a different wallet from
+the same words; the wallet passphrase only encrypts the wallet file. Both the
+phrase and BIP39 passphrase must be UTF-8 NFKD normalized. Set `restore=false`
+only when creating a new wallet that has no past transactions to find. A
+restore scans the chain from genesis and may take a long time. Omit either
+passphrase line when it is not needed.
+
 By default, wallets are created in the `wallets` folder of the data directory, which varies by operating system, as shown below. The user can change the default by using the `-datadir` or `-walletdir` initialization parameters.
 
 | Operating System | Default wallet directory                                    |
