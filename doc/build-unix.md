@@ -1,217 +1,117 @@
 UNIX BUILD NOTES
 ====================
-Some notes on how to build Dorkcoin in Unix.
 
-(For BSD specific instructions, see `build-*bsd.md` in this directory.)
+This document describes the CMake + depends build workflow for Dork Core (Dorkcoin) on Unix-like systems. The repository has moved to the Bitcoin Core 28 CMake layout; the legacy autotools (./autogen.sh && ./configure) flow is deprecated.
 
-To Build
+Prerequisites
+-------------
+- A C++ toolchain (gcc/clang, make or ninja)
+- cmake (>= 3.16 recommended)
+- python3
+- build utilities (make, pkg-config, etc.)
+
+See doc/dependencies.md and depends/README.md for details about specific library requirements and how to build them with the depends system.
+
+Overview
+--------
+The recommended workflow is:
+
+1. (Optional) Build the "depends" tree for reproducible and hermetic dependency builds (recommended for release or cross-compiles).
+2. Configure the project with CMake into a separate build directory.
+3. Build with cmake --build (or ninja/msbuild on Windows).
+
+Building Depends
+-----------------
+To build all dependencies for a target triplet using the depends system (example: native x86_64 Linux):
+
+```bash
+cd depends
+make HOST=x86_64-pc-linux-gnu -j$(nproc)
+```
+
+For cross-compiling to Windows (mingw-w64):
+
+```bash
+cd depends
+make HOST=x86_64-w64-mingw32 -j$(nproc)
+```
+
+See depends/README.md for additional targets and options (NO_QT, NO_SQLITE, etc.).
+
+Native (Linux/macOS) build with CMake
+------------------------------------
+A simple native build (after installing system packages or building depends):
+
+```bash
+# From repository root
+mkdir -p build
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build -- -j$(nproc)
+# Optional: install
+sudo cmake --install build --prefix=/usr
+```
+
+Notes:
+- To build without the GUI, add an appropriate CMake option (see the CMake cache or project documentation). You can configure options via -D<NAME>=<VALUE> on the cmake command line or using ccmake/cmake-gui.
+- To enable debugging builds: -DCMAKE_BUILD_TYPE=RelWithDebInfo or Debug.
+
+Cross-compiling using Depends
+-----------------------------
+When cross-compiling, build depends for the target triplet first (see above). The depends tree provides a toolchain file and a controlled prefix which you can point CMake at.
+
+Example (cross-compiling to 64-bit Windows with mingw-w64):
+
+```bash
+# From repository root
+cd depends
+make HOST=x86_64-w64-mingw32 -j$(nproc)
+cd ..
+
+mkdir -p build-win64
+cmake -S . -B build-win64 \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_TOOLCHAIN_FILE=$(pwd)/depends/x86_64-w64-mingw32/share/toolchain.cmake
+cmake --build build-win64 -- -j$(nproc)
+```
+
+Note: The exact path/name of the toolchain file may vary by depends layout and triplet. See depends/README.md and the contents of depends/<triplet>/share/ for the precise filename to use.
+
+Windows (MSVC) builds
 ---------------------
+For native MSVC builds, see build_msvc/README.md. The project includes a build_msvc helper that generates Visual Studio project files and explains how to build with msbuild or Visual Studio.
+
+Options and Feature Flags
+-------------------------
+CMake variables can be passed with -D<VAR>=<VALUE>. Common choices you may want to set:
+- -DENABLE_WALLET=OFF (or equivalent) to build without the legacy wallet — consult the CMake cache for the exact variable name used in this tree.
+- -DWITH_GUI=OFF / -DWITH_QT=OFF to skip building the Qt GUI.
+- -DCPACK_GENERATOR=ZIP to adjust packaging options for deploy
+
+If you are unsure of the exact variable names supported by the project, configure once and inspect build/CMakeCache.txt or run:
 
 ```bash
-./autogen.sh
-./configure
-make # use "-j N" for N parallel jobs
-make install # optional
+cmake -S . -B build -LAH
 ```
 
-See below for instructions on how to [install the dependencies on popular Linux
-distributions](#linux-distribution-specific-instructions), or the
-[dependencies](#dependencies) section for a complete overview.
-
-## Memory Requirements
-
-C++ compilers are memory-hungry. It is recommended to have at least 1.5 GB of
-memory available when compiling Dorkcoin. On systems with less, gcc can be
-tuned to conserve memory with additional CXXFLAGS:
-
-
-    ./configure CXXFLAGS="--param ggc-min-expand=1 --param ggc-min-heapsize=32768"
-
-Alternatively, or in addition, debugging information can be skipped for compilation. The default compile flags are
-`-g -O2`, and can be changed with:
-
-    ./configure CXXFLAGS="-g0"
-
-Finally, clang (often less resource hungry) can be used instead of gcc, which is used by default:
-
-    ./configure CXX=clang++ CC=clang
-
-## Linux Distribution Specific Instructions
-
-### Ubuntu & Debian
-
-#### Dependency Build Instructions
-
-Build requirements:
-
-    sudo apt-get install build-essential libtool autotools-dev automake pkg-config bsdmainutils python3
-
-Now, you can either build from self-compiled [depends](#dependencies) or install the required dependencies:
-
-    sudo apt-get install libevent-dev libboost-dev
-
-SQLite is required for the descriptor wallet:
-
-    sudo apt install libsqlite3-dev
-
-Berkeley DB is only required for the legacy wallet. Ubuntu and Debian have their own `libdb-dev` and `libdb++-dev` packages,
-but these will install Berkeley DB 5.3 or later. This will break binary wallet compatibility with the distributed
-executables, which are based on BerkeleyDB 6.2. If you do not care about wallet compatibility, pass
-`--with-incompatible-bdb` to configure. Otherwise, you can build Berkeley DB [yourself](#berkeley-db).
-
-To build Dorkcoin without wallet, see [*Disable-wallet mode*](#disable-wallet-mode)
-
-Optional port mapping libraries (see: `--with-miniupnpc` and `--with-natpmp`):
-
-    sudo apt install libminiupnpc-dev libnatpmp-dev
-
-ZMQ dependencies (provides ZMQ API):
-
-    sudo apt-get install libzmq3-dev
-
-User-Space, Statically Defined Tracing (USDT) dependencies:
-
-    sudo apt install systemtap-sdt-dev
-
-GUI dependencies:
-
-If you want to build dorkcoin-qt, make sure that the required packages for Qt development
-are installed. Qt 5 is necessary to build the GUI.
-To build without GUI pass `--without-gui`.
-
-To build with Qt 5 you need the following:
-
-    sudo apt-get install qtbase5-dev qttools5-dev qttools5-dev-tools
-
-Additionally, to support Wayland protocol for modern desktop environments:
-
-    sudo apt install qtwayland5
-
-libqrencode (optional) can be installed with:
-
-    sudo apt-get install libqrencode-dev
-
-Once these are installed, they will be found by configure and a dorkcoin-qt executable will be
-built by default.
-
-
-### Fedora
-
-#### Dependency Build Instructions
-
-Build requirements:
-
-    sudo dnf install gcc-c++ libtool make autoconf automake python3
-
-Now, you can either build from self-compiled [depends](#dependencies) or install the required dependencies:
-
-    sudo dnf install libevent-devel boost-devel openssl-devel
-
-SQLite is required for the descriptor wallet:
-
-    sudo dnf install sqlite-devel
-
-Berkeley DB is only required for the legacy wallet. Fedora releases have only `libdb-devel` and `libdb-cxx-devel` packages, but these will install
-Berkeley DB 5.3 or later. This will break binary wallet compatibility with the distributed executables, which
-are based on Berkeley DB 6.2. If you do not care about wallet compatibility,
-pass `--with-incompatible-bdb` to configure. Otherwise, you can build Berkeley DB [yourself](#berkeley-db).
-
-To build Dorkcoin without wallet, see [*Disable-wallet mode*](#disable-wallet-mode)
-
-Optional port mapping libraries (see: `--with-miniupnpc` and `--with-natpmp`):
-
-    sudo dnf install miniupnpc-devel libnatpmp-devel
-
-ZMQ dependencies (provides ZMQ API):
-
-    sudo dnf install zeromq-devel
-
-User-Space, Statically Defined Tracing (USDT) dependencies:
-
-    sudo dnf install systemtap-sdt-devel
-
-GUI dependencies:
-
-If you want to build dorkcoin-qt, make sure that the required packages for Qt development
-are installed. Qt 5 is necessary to build the GUI.
-To build without GUI pass `--without-gui`.
-
-To build with Qt 5 you need the following:
-
-    sudo dnf install qt5-qttools-devel qt5-qtbase-devel
-
-Additionally, to support Wayland protocol for modern desktop environments:
-
-    sudo dnf install qt5-qtwayland
-
-libqrencode (optional) can be installed with:
-
-    sudo dnf install qrencode-devel
-
-Once these are installed, they will be found by configure and a dorkcoin-qt executable will be
-built by default.
-
-## Dependencies
-
-See [dependencies.md](dependencies.md) for a complete overview, and
-[depends](/depends/README.md) on how to compile them yourself, if you wish to
-not use the packages of your Linux distribution.
-
-### Berkeley DB
-
-The legacy wallet uses Berkeley DB. To ensure backwards compatibility it is
-required to use Berkeley DB 6.2 for builds supporting old Dorkcoin wallets.
-Berkeley DB 4.8 cannot read their Btree version 10 databases. Version 6.2 uses
-AGPLv3 (or an applicable Oracle commercial license); retain its license and
-comply with the applicable distribution/source obligations.
-If you have to build it yourself, and don't
-want to use any other libraries built in depends, you can do:
-```bash
-make -C depends NO_BOOST=1 NO_LIBEVENT=1 NO_QT=1 NO_SQLITE=1 NO_NATPMP=1 NO_UPNP=1 NO_ZMQ=1 NO_USDT=1
-...
-to: /path/to/dorkcoin/depends/x86_64-pc-linux-gnu
-```
-and configure using the following:
-```bash
-export BDB_PREFIX="/path/to/dorkcoin/depends/x86_64-pc-linux-gnu"
-
-./configure \
-    BDB_LIBS="-L${BDB_PREFIX}/lib -ldb_cxx-6.2" \
-    BDB_CFLAGS="-I${BDB_PREFIX}/include"
-```
-
-**Note**: Make sure that `BDB_PREFIX` is an absolute path.
-
-**Note**: You only need Berkeley DB if the legacy wallet is enabled (see [*Disable-wallet mode*](#disable-wallet-mode)).
+Berkeley DB and Wallet Compatibility
+-----------------------------------
+Legacy wallet compatibility requires Berkeley DB 6.2.x. If you need to preserve binary wallet compatibility, either install a compatible BDB from your distribution or build it in depends. See doc/build-unix.md (Berkeley DB section) and depends/README.md for more information.
 
 Disable-wallet mode
---------------------
-When the intention is to only run a P2P node, without a wallet, Dorkcoin can
-be compiled in disable-wallet mode with:
+-------------------
+To build a P2P-only node without wallet support, pass the appropriate CMake flag to disable the wallet (see the project CMake options as suggested above). When the wallet is disabled, dependencies such as Berkeley DB and SQLite are not required.
 
-    ./configure --disable-wallet
+Distribution-specific notes
+---------------------------
+Package names and package-manager commands vary between distributions. Earlier autotools-specific examples (apt-get install ... && ./autogen.sh && ./configure) have been replaced by the CMake workflow shown above. For convenience, here are common packages to install on Debian/Ubuntu for a native build:
 
-In this case there is no dependency on SQLite or Berkeley DB.
+```bash
+sudo apt update
+sudo apt install build-essential pkg-config cmake git libtool libevent-dev libboost-dev libssl-dev python3 qtbase5-dev qttools5-dev-tools libsqlite3-dev
+```
 
-Mining is also possible in disable-wallet mode using the `getblocktemplate` RPC call.
+Refer to the distribution-specific sections in the original document for older examples; for reproducible builds or cross-compiles prefer depends.
 
-Additional Configure Flags
---------------------------
-A list of additional configure flags can be displayed with:
-
-    ./configure --help
-
-
-Setup and Build Example: Arch Linux
------------------------------------
-This example lists the steps necessary to setup and build a command line only distribution of the latest changes on Arch Linux:
-
-    pacman --sync --needed autoconf automake boost gcc git libevent libtool make pkgconf python sqlite
-    git clone https://github.com/dork-core/dorkcoin.git
-    cd dorkcoin/
-    ./autogen.sh
-    ./configure
-    make check
-    ./src/dorkcoind
-
-If you intend to work with legacy Berkeley DB wallets, see [Berkeley DB](#berkeley-db) section.
+Upstream reference
+------------------
+These build instructions follow the CMake + depends workflow used by Bitcoin Core. For additional examples and upstream rationale, see the Bitcoin Core build documentation and the depends/README.md in this repository.
