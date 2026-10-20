@@ -263,7 +263,6 @@ BOOST_AUTO_TEST_CASE(mnemonic_create_wallet)
         UninterruptibleSleep(std::chrono::milliseconds{500});
         auto dest{wallet->GetNewDestination(OutputType::LEGACY, "")};
         BOOST_REQUIRE_MESSAGE(dest, util::ErrorString(dest).original);
-        // m/44'/4151811'/0'/0/0, same as other BIP39 Dorkcoin wallets (e.g. DorkyApp)
         BOOST_CHECK_EQUAL(EncodeDestination(*dest), "DCnjtbsRbAG9HyXQrCtWivEP57Sq8MmyRq");
         if (!first_dest) {
             first_dest = *dest;
