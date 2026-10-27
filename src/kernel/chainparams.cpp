@@ -122,8 +122,6 @@ public:
         if (!regtest) checkpointData = {{{0, expected}}};
         m_assumeutxo_data.clear();
         chainTxData = {regtest ? 0 : 1773037267, 0, 0};
-        // Replace this with the wallet-controlled donation address before release.
-        vDonationAddress = {"DHtZEQ65EHcXigeZ7qZHEsotaKskX7fQdJ"};
 
         if (regtest) {
             for (const auto& [dep, height] : opts.activation_heights) {

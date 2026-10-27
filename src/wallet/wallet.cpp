@@ -3361,16 +3361,6 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
     std::optional<CAmount> reserve_balance = ParseMoney(gArgs.GetArg("-reservebalance", FormatMoney(DEFAULT_RESERVE_BALANCE)));
     walletInstance->m_reserve_balance = reserve_balance.value_or(DEFAULT_RESERVE_BALANCE);
 
-    std::string donation_arg = args.GetArg("-donation", strprintf("%u%%", DEFAULT_DONATION_PERCENTAGE));
-    if (!donation_arg.empty() && donation_arg.back() == '%') donation_arg.pop_back();
-    unsigned int donation_percentage = DEFAULT_DONATION_PERCENTAGE;
-    const auto [parsed_end, parse_error] = std::from_chars(donation_arg.data(), donation_arg.data() + donation_arg.size(), donation_percentage);
-    if (parse_error != std::errc{} || parsed_end != donation_arg.data() + donation_arg.size()) {
-        donation_percentage = DEFAULT_DONATION_PERCENTAGE;
-    }
-    donation_percentage = std::clamp(donation_percentage, MIN_DONATION_PERCENTAGE, MAX_DONATION_PERCENTAGE);
-    walletInstance->m_donation_percentage = donation_percentage;
-
     walletInstance->WalletLogPrintf("Wallet completed loading in %15dms\n", Ticks<std::chrono::milliseconds>(SteadyClock::now() - start));
 
     // Try to top up keypool. No-op if the wallet is locked.

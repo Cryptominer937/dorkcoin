@@ -502,10 +502,9 @@ public:
     OutputType getDefaultAddressType() override { return m_wallet->m_default_address_type; }
     CAmount getDefaultMaxTxFee() override { return m_wallet->m_default_max_tx_fee; }
     void remove() override
-    {
-        RemoveWallet(m_context, m_wallet, /*load_on_start=*/false);
-    }
-    unsigned int getDonationPercentage() override { return m_wallet->m_donation_percentage; }
+     {
+         RemoveWallet(m_context, m_wallet, /*load_on_start=*/false);
+     }
     bool tryGetStakeWeight(uint64_t& nWeight) override
     {
         TRY_LOCK(m_wallet->cs_wallet, locked_wallet);

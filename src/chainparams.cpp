@@ -137,15 +137,4 @@ void SelectParams(const ChainType chain)
     globalChainParams = CreateChainParams(gArgs, chain);
 }
 
-// Dorkcoin: staking reward donation destination
-std::string CChainParams::GetDonationAddress() const
-{
-    return !vDonationAddress.empty() ? vDonationAddress[0] : "";
-}
-
-CScript CChainParams::GetDonationScript() const
-{
-    CTxDestination dest = DecodeDestination(GetDonationAddress());
-    CScript scriptPubKey = GetScriptForDestination(dest);
-    return scriptPubKey;
-}
+// Dorkcoin: staking rewards go entirely to the staker
