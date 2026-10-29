@@ -110,7 +110,7 @@ extern const std::vector<std::string> CHECKLEVEL_DOC;
 
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams, bool fProofOfStake = false);
 CAmount GetProofOfWorkSubsidy();
-CAmount GetProofOfStakeSubsidy();
+CAmount GetProofOfStakeSubsidy(int nHeight = 0);
 
 bool FatalError(kernel::Notifications& notifications, BlockValidationState& state, const bilingual_str& message);
 

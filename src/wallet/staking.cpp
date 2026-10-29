@@ -429,7 +429,7 @@ bool CreateCoinStake(CWallet& wallet, unsigned int nBits, int64_t nSearchInterva
     }
 
     // Calculate reward
-    CAmount nReward = nFees + GetProofOfStakeSubsidy();
+    CAmount nReward = nFees + GetProofOfStakeSubsidy(pindexPrev ? pindexPrev->nHeight + 1 : 0);
     if (nReward < 0)
         return false;
 

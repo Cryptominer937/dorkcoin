@@ -1960,7 +1960,7 @@ PackageMempoolAcceptResult ProcessNewPackage(Chainstate& active_chainstate, CTxM
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams, bool fProofOfStake)
 {
     if (fProofOfStake)
-        return GetProofOfStakeSubsidy();
+        return GetProofOfStakeSubsidy(nHeight);
 
     return GetProofOfWorkSubsidy();
 }
@@ -1971,9 +1971,13 @@ CAmount GetProofOfWorkSubsidy()
     return 100 * COIN;
 }
 
-CAmount GetProofOfStakeSubsidy()
+CAmount GetProofOfStakeSubsidy(int nHeight)
 {
-    return 100 * COIN;
+    if (nHeight < 220000) return 100 * COIN;
+    if (nHeight >= 1270000) return 1 * COIN;
+    CAmount reward = 100 * COIN - (CAmount)(nHeight - 220000) * 99 * COIN / 1050000;
+    if (reward < 1 * COIN) reward = 1 * COIN;
+    return reward;
 }
 
 CoinsViews::CoinsViews(DBParams db_params, CoinsViewOptions options)
